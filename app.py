@@ -13,13 +13,7 @@ st.sidebar.title("Menu")
 
 pagina = st.sidebar.radio(
 "Navegação",
-[
-"Painel",
-"Cadastrar veículo",
-"Estoque",
-"Vendas",
-"Financeiro"
-]
+["Painel", "Cadastrar veículo", "Estoque", "Vendas", "Financeiro"]
 )
 
 if pagina == "Painel":
@@ -47,24 +41,9 @@ st.header("Cadastrar veículo")
 with st.form("form_veiculo"):
     marca = st.text_input("Marca")
     modelo = st.text_input("Modelo")
-    ano = st.number_input(
-        "Ano",
-        min_value=1950,
-        max_value=2100,
-        value=2020
-    )
-    preco_compra = st.number_input(
-        "Preço de compra (R$)",
-        min_value=0.0,
-        value=0.0,
-        step=100.0
-    )
-    preco_venda = st.number_input(
-        "Preço anunciado (R$)",
-        min_value=0.0,
-        value=0.0,
-        step=100.0
-    )
+    ano = st.number_input("Ano", min_value=1950, max_value=2100, value=2020)
+    preco_compra = st.number_input("Preço de compra (R$)", min_value=0.0, value=0.0, step=100.0)
+    preco_venda = st.number_input("Preço anunciado (R$)", min_value=0.0, value=0.0, step=100.0)
 
     enviar = st.form_submit_button("Cadastrar veículo")
 
@@ -72,19 +51,17 @@ if enviar:
     if not marca.strip() or not modelo.strip():
         st.error("Preencha a marca e o modelo.")
     else:
-        st.warning(
-            "A tela está funcionando, mas o cadastro permanente "
-            "será conectado ao banco de dados na próxima etapa."
-        )
+        st.success(f"Veículo preenchido: {marca} {modelo}, ano {ano}.")
+        st.warning("Atenção: o cadastro ainda não é permanente. Vamos conectar o banco de dados depois.")
 ```
 
 elif pagina == "Estoque":
 st.header("📦 Estoque de veículos")
-st.info("O estoque será conectado ao banco de dados na próxima etapa.")
+st.info("Vamos implementar o estoque conectado ao banco de dados.")
 
 elif pagina == "Vendas":
 st.header("💰 Controle de vendas")
-st.info("Vamos implementar o registro de vendas em seguida.")
+st.info("Vamos implementar o registro de vendas.")
 
 elif pagina == "Financeiro":
 st.header("📊 Financeiro")
