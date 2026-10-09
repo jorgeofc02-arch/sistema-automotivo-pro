@@ -2,25 +2,23 @@ import streamlit as st
 
 st.set_page_config(page_title="Sistema Automotivo Pro", page_icon="🚗")
 
-st.title("Sistema Automotivo Pro 🚗")
-st.write("O sistema está funcionando!")
+st.title("🚗 Sistema Automotivo Pro")
+st.subheader("Sistema de gestão para concessionárias")
 
-pagina = st.sidebar.radio("Menu", ["Painel", "Veículos", "Vendas"])
+st.sidebar.title("Menu")
+st.sidebar.write("Painel de controle")
 
-if pagina == "Painel":
-st.header("Painel de controle")
-st.write("Bem-vindo!")
+st.metric("Veículos em estoque", 0)
+st.metric("Vendas realizadas", 0)
+st.metric("Lucro total", "R$ 0,00")
 
-elif pagina == "Veículos":
 st.header("Cadastro de veículos")
-marca = st.text_input("Marca")
-modelo = st.text_input("Modelo")
 
-```
-if st.button("Cadastrar"):
-    st.success("Botão funcionando!")
-```
+marca = st.text_input("Marca do veículo")
+modelo = st.text_input("Modelo do veículo")
+ano = st.number_input("Ano", min_value=1950, max_value=2100, value=2020)
 
-elif pagina == "Vendas":
-st.header("Controle de vendas")
-st.write("Área de vendas")
+st.write("Confira os dados preenchidos:")
+st.write("Marca:", marca)
+st.write("Modelo:", modelo)
+st.write("Ano:", ano)
