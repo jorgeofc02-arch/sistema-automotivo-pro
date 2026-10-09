@@ -1,5 +1,6 @@
 import streamlit as st
 
+
 st.set_page_config(page_title="Sistema Automotivo Pro", page_icon="🚗", layout="wide")
 
 st.title("🚗 Sistema Automotivo Pro")
