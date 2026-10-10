@@ -1,259 +1,269 @@
 import streamlit as st
+import pandas as pd
+import uuid
+from supabase import create_client
 from datetime import datetime
 
+# ==========================================
+# CONFIGURAÇÃO
+# ==========================================
+
 st.set_page_config(
-    page_title="Automotivo Pro",
+    page_title="Sistema Automotivo Pro",
     page_icon="🚘",
     layout="wide",
     initial_sidebar_state="expanded"
 )
 
-# =========================
-# IDENTIDADE VISUAL
-# =========================
-
 st.markdown("""
 <style>
-@import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap');
+    @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap');
 
-html, body, [class*="css"] {
-    font-family: 'Inter', sans-serif;
-}
+    html, body, [class*="css"] {
+        font-family: 'Inter', sans-serif;
+    }
 
-.stApp {
-    background: #111211;
-    color: #F2F2F0;
-}
+    .stApp {
+        background: #0b0d12;
+        color: #f1f5f9;
+    }
 
-[data-testid="stHeader"] {
-    background: rgba(17,18,17,0.95);
-}
+    section[data-testid="stSidebar"] {
+        background: #10131a;
+        border-right: 1px solid #242a36;
+    }
 
-[data-testid="stSidebar"] {
-    background: #191A19;
-    border-right: 1px solid #303130;
-}
+    .block-container {
+        padding-top: 2rem;
+        padding-bottom: 3rem;
+        max-width: 1450px;
+    }
 
-[data-testid="stSidebar"] * {
-    color: #EAEAE7;
-}
+    .hero {
+        background: linear-gradient(135deg, #171c27, #10131a);
+        border: 1px solid #293140;
+        border-radius: 20px;
+        padding: 30px;
+        margin-bottom: 28px;
+    }
 
-.block-container {
-    padding-top: 2.2rem;
-    padding-bottom: 3rem;
-    max-width: 1500px;
-}
+    .hero h1 {
+        color: #ffffff;
+        font-size: 34px;
+        font-weight: 800;
+        margin: 0;
+    }
 
-h1, h2, h3 {
-    color: #F4F4F1 !important;
-    letter-spacing: -0.7px;
-}
+    .hero p {
+        color: #9ca8ba;
+        margin-top: 10px;
+    }
 
-p, label, span {
-    color: inherit;
-}
+    .metric-card {
+        background: #141821;
+        border: 1px solid #293140;
+        border-radius: 16px;
+        padding: 22px;
+        min-height: 125px;
+    }
 
-.small-muted {
-    color: #969994;
-    font-size: 13px;
-}
+    .metric-label {
+        color: #9ca8ba;
+        font-size: 13px;
+        margin-bottom: 12px;
+    }
 
-.brand {
-    font-size: 12px;
-    font-weight: 800;
-    letter-spacing: 3px;
-    color: #FFFFFF;
-}
+    .metric-value {
+        color: #ffffff;
+        font-size: 27px;
+        font-weight: 800;
+    }
 
-.brand span {
-    color: #92958F;
-}
+    .section-title {
+        color: #ffffff;
+        font-size: 23px;
+        font-weight: 750;
+        margin: 28px 0 18px 0;
+    }
 
-.hero {
-    background: linear-gradient(120deg, #242624, #181918);
-    border: 1px solid #363836;
-    border-radius: 16px;
-    padding: 28px;
-    margin-bottom: 25px;
-}
+    .vehicle-card {
+        background: #141821;
+        border: 1px solid #293140;
+        border-radius: 16px;
+        padding: 18px;
+        margin-bottom: 12px;
+    }
 
-.hero-label {
-    font-size: 11px;
-    letter-spacing: 3px;
-    color: #A5A8A2;
-    font-weight: 700;
-}
+    .vehicle-name {
+        color: #ffffff;
+        font-size: 19px;
+        font-weight: 750;
+    }
 
-.hero-title {
-    font-size: 30px;
-    line-height: 1.3;
-    font-weight: 800;
-    margin-top: 12px;
-    color: #FFFFFF;
-}
+    .vehicle-info {
+        color: #9ca8ba;
+        font-size: 13px;
+        margin-top: 7px;
+    }
 
-.hero-description {
-    font-size: 14px;
-    color: #B5B7B1;
-    margin-top: 8px;
-}
+    .vehicle-price {
+        color: #58d6a0;
+        font-size: 22px;
+        font-weight: 800;
+        margin-top: 14px;
+    }
 
-.metric-card {
-    background: #1B1C1B;
-    border: 1px solid #323432;
-    border-radius: 12px;
-    padding: 20px;
-    min-height: 115px;
-}
+    div.stButton > button {
+        border-radius: 10px;
+        min-height: 42px;
+        font-weight: 600;
+    }
 
-.metric-label {
-    font-size: 12px;
-    color: #A3A59F;
-}
+    div[data-testid="stForm"] {
+        background: #141821;
+        border: 1px solid #293140;
+        border-radius: 16px;
+        padding: 22px;
+    }
 
-.metric-value {
-    font-size: 27px;
-    font-weight: 800;
-    color: #F6F6F3;
-    margin-top: 12px;
-}
+    h1, h2, h3 {
+        color: #ffffff;
+    }
 
-.vehicle-card {
-    background: #1B1C1B;
-    border: 1px solid #353735;
-    border-radius: 13px;
-    padding: 13px;
-    margin-bottom: 10px;
-}
+    label {
+        color: #d5dbe5 !important;
+    }
 
-.vehicle-name {
-    font-size: 17px;
-    font-weight: 700;
-    color: #FFFFFF;
-    margin-top: 12px;
-}
+    .stTextInput input, .stNumberInput input {
+        background: #0f1219;
+    }
 
-.vehicle-details {
-    font-size: 12px;
-    color: #A3A59F;
-    margin-top: 6px;
-}
-
-.vehicle-price {
-    font-size: 22px;
-    font-weight: 800;
-    color: #F5F5F2;
-    margin-top: 16px;
-}
-
-.status {
-    display: inline-block;
-    border: 1px solid #454745;
-    border-radius: 5px;
-    padding: 5px 8px;
-    font-size: 10px;
-    color: #D7D9D3;
-    margin-top: 10px;
-}
-
-div.stButton > button {
-    background: #E9E9E5;
-    color: #171817;
-    border: 1px solid #E9E9E5;
-    border-radius: 7px;
-    font-weight: 700;
-    min-height: 42px;
-}
-
-div.stButton > button:hover {
-    background: #FFFFFF;
-    color: #111211;
-    border-color: #FFFFFF;
-}
-
-[data-testid="stMetric"] {
-    background: #1B1C1B;
-    border: 1px solid #323432;
-    padding: 15px;
-    border-radius: 10px;
-}
-
-[data-testid="stMetricLabel"] {
-    color: #A3A59F;
-}
-
-[data-testid="stMetricValue"] {
-    color: #F6F6F3;
-}
-
-input, textarea {
-    background-color: #202120 !important;
-}
-
-hr {
-    border-color: #333533;
-}
-
-.stSelectbox label,
-.stTextInput label,
-.stNumberInput label,
-.stFileUploader label {
-    color: #D9DAD5 !important;
-}
-
+    .footer {
+        text-align: center;
+        color: #697588;
+        font-size: 12px;
+        padding-top: 35px;
+    }
 </style>
 """, unsafe_allow_html=True)
 
 
-# =========================
-# DADOS DA SESSÃO
-# =========================
+# ==========================================
+# CONEXÃO COM O SUPABASE
+# ==========================================
 
-if "veiculos" not in st.session_state:
-    st.session_state.veiculos = []
+@st.cache_resource
+def conectar_supabase():
+    url = st.secrets["supabase"]["url"]
+    chave = st.secrets["supabase"]["secret_key"]
+    return create_client(url, chave)
 
-if "proximo_id" not in st.session_state:
-    st.session_state.proximo_id = 1
+
+try:
+    supabase = conectar_supabase()
+except Exception as erro:
+    st.error("Não foi possível conectar ao Supabase.")
+    st.info(
+        "Confira os Secrets do Streamlit. "
+        "A seção [supabase] precisa conter url e secret_key."
+    )
+    st.stop()
 
 
-def dinheiro(valor):
-    return (
-        f"R$ {valor:,.2f}"
-        .replace(",", "X")
-        .replace(".", ",")
-        .replace("X", ".")
+# ==========================================
+# CONCESSIONÁRIA DE TESTE
+# ==========================================
+
+@st.cache_resource
+def obter_concessionaria():
+    resultado = (
+        supabase.table("concessionarias")
+        .select("id, nome")
+        .order("criado_em")
+        .limit(1)
+        .execute()
     )
 
+    if resultado.data:
+        return resultado.data[0]
 
-def card_metrica(titulo, valor):
-    st.markdown(
-        f"""
-        <div class="metric-card">
-            <div class="metric-label">{titulo}</div>
-            <div class="metric-value">{valor}</div>
-        </div>
-        """,
-        unsafe_allow_html=True
+    criada = (
+        supabase.table("concessionarias")
+        .insert({"nome": "Minha Concessionária"})
+        .execute()
     )
 
+    if not criada.data:
+        raise RuntimeError("Não foi possível criar a concessionária.")
 
-# =========================
+    return criada.data[0]
+
+
+try:
+    concessionaria = obter_concessionaria()
+    concessionaria_id = concessionaria["id"]
+except Exception as erro:
+    st.error("Erro ao preparar a concessionária de teste.")
+    st.code(str(erro))
+    st.stop()
+
+
+# ==========================================
+# FUNÇÕES
+# ==========================================
+
+def buscar_veiculos():
+    resposta = (
+        supabase.table("veiculos")
+        .select("*")
+        .eq("concessionaria_id", concessionaria_id)
+        .order("criado_em", desc=True)
+        .execute()
+    )
+    return resposta.data or []
+
+
+def formatar_moeda(valor):
+    valor_formatado = f"{float(valor):,.2f}"
+    valor_formatado = valor_formatado.replace(",", "X")
+    valor_formatado = valor_formatado.replace(".", ",")
+    valor_formatado = valor_formatado.replace("X", ".")
+    return f"R$ {valor_formatado}"
+
+
+def obter_url_foto(caminho):
+    if not caminho:
+        return None
+
+    try:
+        resposta = (
+            supabase.storage
+            .from_("fotos-veiculos")
+            .create_signed_url(caminho, 3600)
+        )
+
+        if isinstance(resposta, dict):
+            return resposta.get("signedURL") or resposta.get("signedUrl")
+
+        return None
+    except Exception:
+        return None
+
+
+# ==========================================
 # MENU LATERAL
-# =========================
+# ==========================================
 
 with st.sidebar:
-    st.markdown(
-        '<div class="brand">AUTOMOTIVO <span>PRO</span></div>',
-        unsafe_allow_html=True
-    )
-
+    st.markdown("## 🚘 AUTO PRO")
     st.caption("GESTÃO AUTOMOTIVA")
+
     st.divider()
 
     pagina = st.radio(
-        "NAVEGAÇÃO",
+        "MENU PRINCIPAL",
         [
-            "Visão geral",
+            "Dashboard",
             "Estoque de veículos",
             "Cadastrar veículo"
         ],
@@ -262,388 +272,421 @@ with st.sidebar:
 
     st.divider()
 
-    st.markdown(
-        '<div class="small-muted">SISTEMA AUTOMOTIVO PRO</div>',
-        unsafe_allow_html=True
-    )
+    st.markdown("### 🏢 Concessionária")
+    st.write(concessionaria["nome"])
 
-    st.caption("Versão inicial")
-
-
-# =========================
-# INDICADORES
-# =========================
-
-veiculos = st.session_state.veiculos
-
-total = len(veiculos)
-
-disponiveis = sum(
-    v["situacao"] == "Disponível" for v in veiculos
-)
-
-reservados = sum(
-    v["situacao"] == "Reservado" for v in veiculos
-)
-
-vendidos = sum(
-    v["situacao"] == "Vendido" for v in veiculos
-)
-
-valor_estoque = sum(
-    v["preco"] for v in veiculos
-    if v["situacao"] != "Vendido"
-)
+    st.caption("Versão de desenvolvimento")
+    st.caption("Dados armazenados no Supabase")
 
 
-# =========================
-# VISÃO GERAL
-# =========================
+# ==========================================
+# CARREGAR DADOS
+# ==========================================
 
-if pagina == "Visão geral":
+try:
+    veiculos = buscar_veiculos()
+except Exception as erro:
+    st.error("Não foi possível carregar os veículos.")
+    st.code(str(erro))
+    st.stop()
+
+
+# ==========================================
+# DASHBOARD
+# ==========================================
+
+if pagina == "Dashboard":
 
     st.markdown("""
     <div class="hero">
-        <div class="hero-label">PAINEL DE CONTROLE</div>
-        <div class="hero-title">Sua operação.<br>Em um só lugar.</div>
-        <div class="hero-description">
-            Gerencie o estoque e acompanhe os veículos da sua loja.
-        </div>
+        <h1>Sistema Automotivo Pro</h1>
+        <p>Controle seu estoque e acompanhe seus veículos em um só lugar.</p>
     </div>
     """, unsafe_allow_html=True)
 
-    st.subheader("Resumo da operação")
+    total = len(veiculos)
+    disponiveis = sum(
+        1 for v in veiculos if v["status"] == "Disponível"
+    )
+    reservados = sum(
+        1 for v in veiculos if v["status"] == "Reservado"
+    )
+    vendidos = sum(
+        1 for v in veiculos if v["status"] == "Vendido"
+    )
 
-    c1, c2, c3, c4 = st.columns(4)
+    valor_estoque = sum(
+        float(v["preco"])
+        for v in veiculos
+        if v["status"] != "Vendido"
+    )
 
-    with c1:
-        card_metrica("TOTAL DE VEÍCULOS", total)
+    col1, col2, col3, col4 = st.columns(4)
 
-    with c2:
-        card_metrica("DISPONÍVEIS", disponiveis)
+    metricas = [
+        (col1, "TOTAL DE VEÍCULOS", total),
+        (col2, "DISPONÍVEIS", disponiveis),
+        (col3, "RESERVADOS", reservados),
+        (col4, "VENDIDOS", vendidos),
+    ]
 
-    with c3:
-        card_metrica("RESERVADOS", reservados)
-
-    with c4:
-        card_metrica("VENDIDOS", vendidos)
-
-    st.write("")
-
-    col1, col2 = st.columns([1.5, 1])
-
-    with col1:
-        st.markdown("### Estoque da loja")
-        st.caption("Valor anunciado dos veículos não vendidos.")
-
-        st.markdown(
-            f"""
-            <div class="hero">
-                <div class="hero-label">VALOR EM ESTOQUE</div>
-                <div class="hero-title">{dinheiro(valor_estoque)}</div>
-            </div>
-            """,
-            unsafe_allow_html=True
-        )
-
-    with col2:
-        st.markdown("### Acesso rápido")
-
-        if st.button(
-            "＋ Cadastrar veículo",
-            use_container_width=True
-        ):
-            st.session_state.pagina_atalho = "Cadastrar veículo"
-            st.rerun()
-
-        if st.button(
-            "⌕ Consultar estoque",
-            use_container_width=True
-        ):
-            st.session_state.pagina_atalho = "Estoque de veículos"
-            st.rerun()
-
-    if "pagina_atalho" in st.session_state:
-        destino = st.session_state.pop("pagina_atalho")
-        st.info(
-            f"Selecione '{destino}' no menu lateral para continuar."
-        )
-
-    st.divider()
-
-    st.subheader("Últimos veículos cadastrados")
-
-    if not veiculos:
-        st.info(
-            "Seu estoque está vazio. Cadastre o primeiro veículo "
-            "para começar."
-        )
-    else:
-        for v in reversed(veiculos[-3:]):
-            a, b, c = st.columns([3, 2, 2])
-
-            a.write(f"**{v['marca']} {v['modelo']}**")
-            b.write(dinheiro(v["preco"]))
-            c.write(v["situacao"])
-
-
-# =========================
-# CADASTRO
-# =========================
-
-elif pagina == "Cadastrar veículo":
+    for coluna, titulo, valor in metricas:
+        with coluna:
+            st.markdown(
+                f"""
+                <div class="metric-card">
+                    <div class="metric-label">{titulo}</div>
+                    <div class="metric-value">{valor}</div>
+                </div>
+                """,
+                unsafe_allow_html=True
+            )
 
     st.markdown(
-        '<div class="hero">'
-        '<div class="hero-label">GESTÃO DE ESTOQUE</div>'
-        '<div class="hero-title">Cadastrar veículo</div>'
-        '<div class="hero-description">'
-        'Adicione os dados do veículo para registrá-lo no estoque.'
-        '</div></div>',
+        '<div class="section-title">Visão geral do estoque</div>',
         unsafe_allow_html=True
     )
 
-    with st.form("cadastro_veiculo", clear_on_submit=True):
+    st.markdown(
+        f"""
+        <div class="metric-card">
+            <div class="metric-label">VALOR DO ESTOQUE NÃO VENDIDO</div>
+            <div class="metric-value">{formatar_moeda(valor_estoque)}</div>
+        </div>
+        """,
+        unsafe_allow_html=True
+    )
+
+    st.markdown(
+        '<div class="section-title">Veículos adicionados recentemente</div>',
+        unsafe_allow_html=True
+    )
+
+    if not veiculos:
+        st.info(
+            "Seu estoque ainda está vazio. "
+            "Acesse 'Cadastrar veículo' para adicionar o primeiro."
+        )
+    else:
+        for veiculo in veiculos[:5]:
+            with st.container(border=True):
+                col1, col2 = st.columns([3, 1])
+
+                with col1:
+                    st.markdown(
+                        f"### {veiculo['marca']} {veiculo['modelo']}"
+                    )
+                    st.caption(
+                        f"Ano {veiculo['ano']} · "
+                        f"{veiculo['quilometragem']:,} km · "
+                        f"Status: {veiculo['status']}"
+                    )
+
+                with col2:
+                    st.markdown(
+                        f"### {formatar_moeda(veiculo['preco'])}"
+                    )
+
+
+# ==========================================
+# ESTOQUE
+# ==========================================
+
+elif pagina == "Estoque de veículos":
+
+    st.markdown("## Estoque de veículos")
+    st.caption("Consulte os veículos cadastrados no banco de dados.")
+
+    pesquisa = st.text_input(
+        "🔎 Pesquisar por marca ou modelo",
+        placeholder="Ex.: Toyota, Corolla, Honda..."
+    )
+
+    filtro_status = st.selectbox(
+        "Filtrar por status",
+        ["Todos", "Disponível", "Reservado", "Vendido"]
+    )
+
+    filtrados = veiculos.copy()
+
+    if pesquisa:
+        filtrados = [
+            v for v in filtrados
+            if pesquisa.lower() in v["marca"].lower()
+            or pesquisa.lower() in v["modelo"].lower()
+        ]
+
+    if filtro_status != "Todos":
+        filtrados = [
+            v for v in filtrados
+            if v["status"] == filtro_status
+        ]
+
+    if not filtrados:
+        st.info("Nenhum veículo encontrado com esses filtros.")
+
+    for veiculo in filtrados:
+        with st.container(border=True):
+            foto_url = obter_url_foto(veiculo.get("foto_url"))
+
+            col_foto, col_info, col_acoes = st.columns(
+                [1, 2, 1]
+            )
+
+            with col_foto:
+                if foto_url:
+                    st.image(foto_url, use_container_width=True)
+                else:
+                    st.markdown("🚘")
+                    st.caption("Sem foto")
+
+            with col_info:
+                st.markdown(
+                    f"### {veiculo['marca']} {veiculo['modelo']}"
+                )
+
+                st.write(
+                    f"**Ano:** {veiculo['ano']}  \n"
+                    f"**Quilometragem:** "
+                    f"{veiculo['quilometragem']:,} km  \n"
+                    f"**Status:** {veiculo['status']}"
+                )
+
+                st.markdown(
+                    f"## {formatar_moeda(veiculo['preco'])}"
+                )
+
+            with col_acoes:
+                novo_status = st.selectbox(
+                    "Status",
+                    ["Disponível", "Reservado", "Vendido"],
+                    index=[
+                        "Disponível", "Reservado", "Vendido"
+                    ].index(veiculo["status"]),
+                    key=f"status_{veiculo['id']}"
+                )
+
+                if st.button(
+                    "Atualizar status",
+                    key=f"atualizar_{veiculo['id']}",
+                    use_container_width=True
+                ):
+                    try:
+                        (
+                            supabase.table("veiculos")
+                            .update({"status": novo_status})
+                            .eq("id", veiculo["id"])
+                            .eq("concessionaria_id", concessionaria_id)
+                            .execute()
+                        )
+
+                        st.success("Status atualizado!")
+                        st.rerun()
+
+                    except Exception as erro:
+                        st.error("Não foi possível atualizar.")
+                        st.code(str(erro))
+
+                confirmar_exclusao = st.checkbox(
+                    "Confirmar exclusão",
+                    key=f"confirmar_{veiculo['id']}"
+                )
+
+                if st.button(
+                    "Excluir veículo",
+                    key=f"excluir_{veiculo['id']}",
+                    use_container_width=True
+                ):
+                    if not confirmar_exclusao:
+                        st.warning(
+                            "Marque 'Confirmar exclusão' antes de excluir."
+                        )
+                    else:
+                        try:
+                            if veiculo.get("foto_url"):
+                                try:
+                                    (
+                                        supabase.storage
+                                        .from_("fotos-veiculos")
+                                        .remove([veiculo["foto_url"]])
+                                    )
+                                except Exception:
+                                    pass
+
+                            (
+                                supabase.table("veiculos")
+                                .delete()
+                                .eq("id", veiculo["id"])
+                                .eq("concessionaria_id", concessionaria_id)
+                                .execute()
+                            )
+
+                            st.success("Veículo excluído.")
+                            st.rerun()
+
+                        except Exception as erro:
+                            st.error("Não foi possível excluir o veículo.")
+                            st.code(str(erro))
+
+
+# ==========================================
+# CADASTRAR VEÍCULO
+# ==========================================
+
+elif pagina == "Cadastrar veículo":
+
+    st.markdown("## Cadastrar veículo")
+    st.caption("Preencha os dados para adicionar um veículo ao estoque.")
+
+    with st.form("form_cadastro_veiculo"):
 
         st.markdown("### Informações do veículo")
 
         col1, col2 = st.columns(2)
 
         with col1:
-            marca = st.text_input("Marca *")
-            modelo = st.text_input("Modelo *")
+            marca = st.text_input(
+                "Marca *",
+                placeholder="Ex.: Toyota"
+            )
+
+            modelo = st.text_input(
+                "Modelo *",
+                placeholder="Ex.: Corolla XEi"
+            )
+
             ano = st.number_input(
-                "Ano",
+                "Ano *",
                 min_value=1950,
-                max_value=2100,
-                value=2022
+                max_value=2035,
+                value=2022,
+                step=1
             )
 
         with col2:
             quilometragem = st.number_input(
-                "Quilometragem",
+                "Quilometragem *",
                 min_value=0,
+                max_value=2_000_000,
                 value=0,
                 step=1000
             )
 
             preco = st.number_input(
                 "Preço de venda (R$) *",
-                min_value=0.0,
-                value=0.0,
-                step=500.0
+                min_value=0.01,
+                max_value=100_000_000.0,
+                value=50000.0,
+                step=1000.0
             )
 
-            situacao = st.selectbox(
-                "Situação inicial",
+            status = st.selectbox(
+                "Status",
                 ["Disponível", "Reservado", "Vendido"]
             )
 
+        st.markdown("### Foto do veículo")
+
         foto = st.file_uploader(
-            "Foto principal do veículo",
-            type=["jpg", "jpeg", "png", "webp"]
+            "Escolha uma imagem",
+            type=["jpg", "jpeg", "png", "webp"],
+            help="Formatos aceitos: JPG, PNG e WEBP. Máximo recomendado: 5 MB."
         )
 
-        salvar = st.form_submit_button(
-            "SALVAR VEÍCULO",
+        if foto is not None:
+            st.image(foto, caption="Prévia da foto", use_container_width=True)
+
+        enviado = st.form_submit_button(
+            "💾 Salvar veículo",
             use_container_width=True
         )
 
-        if salvar:
+        if enviado:
 
             if not marca.strip() or not modelo.strip():
                 st.error("Preencha a marca e o modelo.")
 
-            elif preco <= 0:
-                st.error("Informe um preço maior que zero.")
+            elif foto is not None and foto.size > 5 * 1024 * 1024:
+                st.error("A imagem ultrapassa o limite de 5 MB.")
 
             else:
-                st.session_state.veiculos.append({
-                    "id": st.session_state.proximo_id,
-                    "marca": marca.strip(),
-                    "modelo": modelo.strip(),
-                    "ano": int(ano),
-                    "km": int(quilometragem),
-                    "preco": float(preco),
-                    "situacao": situacao,
-                    "foto": foto.getvalue() if foto else None,
-                    "data": datetime.now().strftime("%d/%m/%Y")
-                })
+                caminho_foto = None
 
-                st.session_state.proximo_id += 1
+                try:
+                    if foto is not None:
+                        extensao = foto.name.rsplit(".", 1)[-1].lower()
 
-                st.success("Veículo cadastrado com sucesso!")
-                st.rerun()
+                        if extensao == "jpeg":
+                            extensao = "jpg"
 
-
-# =========================
-# ESTOQUE
-# =========================
-
-elif pagina == "Estoque de veículos":
-
-    st.markdown(
-        '<div class="hero">'
-        '<div class="hero-label">INVENTÁRIO DA LOJA</div>'
-        '<div class="hero-title">Estoque de veículos</div>'
-        '<div class="hero-description">'
-        'Pesquise, visualize e controle os veículos da concessionária.'
-        '</div></div>',
-        unsafe_allow_html=True
-    )
-
-    f1, f2, f3 = st.columns([2, 1, 1])
-
-    with f1:
-        pesquisa = st.text_input(
-            "Pesquisar",
-            placeholder="Marca ou modelo..."
-        )
-
-    with f2:
-        filtro_situacao = st.selectbox(
-            "Disponibilidade",
-            ["Todos", "Disponível", "Reservado", "Vendido"]
-        )
-
-    with f3:
-        ordenar = st.selectbox(
-            "Ordenar por",
-            ["Mais recentes", "Menor preço", "Maior preço"]
-        )
-
-    filtrados = []
-
-    for v in st.session_state.veiculos:
-
-        nome = f"{v['marca']} {v['modelo']}".lower()
-
-        if pesquisa.lower() not in nome:
-            continue
-
-        if (
-            filtro_situacao != "Todos"
-            and v["situacao"] != filtro_situacao
-        ):
-            continue
-
-        filtrados.append(v)
-
-    if ordenar == "Menor preço":
-        filtrados.sort(key=lambda v: v["preco"])
-
-    elif ordenar == "Maior preço":
-        filtrados.sort(
-            key=lambda v: v["preco"],
-            reverse=True
-        )
-
-    else:
-        filtrados.sort(
-            key=lambda v: v["id"],
-            reverse=True
-        )
-
-    st.markdown(
-        f'<div class="small-muted">{len(filtrados)} veículo(s) encontrado(s)</div>',
-        unsafe_allow_html=True
-    )
-
-    st.write("")
-
-    if not filtrados:
-        st.info(
-            "Nenhum veículo encontrado. "
-            "Cadastre um veículo ou altere os filtros."
-        )
-
-    else:
-        colunas = st.columns(3)
-
-        for indice, v in enumerate(filtrados):
-
-            with colunas[indice % 3]:
-
-                with st.container(border=True):
-
-                    if v["foto"]:
-                        st.image(
-                            v["foto"],
-                            use_container_width=True
-                        )
-                    else:
-                        st.markdown(
-                            """
-                            <div style="
-                                height:150px;
-                                display:flex;
-                                align-items:center;
-                                justify-content:center;
-                                background:#252725;
-                                border-radius:8px;
-                                font-size:42px;
-                            ">🚘</div>
-                            """,
-                            unsafe_allow_html=True
+                        nome_arquivo = (
+                            f"{concessionaria_id}/"
+                            f"{uuid.uuid4().hex}.{extensao}"
                         )
 
-                    st.markdown(
-                        f'<div class="vehicle-name">'
-                        f'{v["marca"]} {v["modelo"]}</div>',
-                        unsafe_allow_html=True
-                    )
+                        tipo_mime = {
+                            "jpg": "image/jpeg",
+                            "png": "image/png",
+                            "webp": "image/webp"
+                        }[extensao]
 
-                    st.markdown(
-                        f'<div class="vehicle-details">'
-                        f'{v["ano"]} &nbsp; · &nbsp; '
-                        f'{v["km"]:,} km'
-                        f'</div>',
-                        unsafe_allow_html=True
-                    )
-
-                    st.markdown(
-                        f'<div class="vehicle-price">'
-                        f'{dinheiro(v["preco"])}</div>',
-                        unsafe_allow_html=True
-                    )
-
-                    st.markdown(
-                        f'<div class="status">'
-                        f'{v["situacao"].upper()}</div>',
-                        unsafe_allow_html=True
-                    )
-
-                    st.write("")
-
-                    with st.expander("Gerenciar veículo"):
-
-                        nova_situacao = st.selectbox(
-                            "Situação",
-                            ["Disponível", "Reservado", "Vendido"],
-                            index=[
-                                "Disponível",
-                                "Reservado",
-                                "Vendido"
-                            ].index(v["situacao"]),
-                            key=f"status_{v['id']}"
+                        (
+                            supabase.storage
+                            .from_("fotos-veiculos")
+                            .upload(
+                                nome_arquivo,
+                                foto.getvalue(),
+                                {
+                                    "content-type": tipo_mime,
+                                    "upsert": "false"
+                                }
+                            )
                         )
 
-                        if st.button(
-                            "Atualizar situação",
-                            key=f"atualizar_{v['id']}",
-                            use_container_width=True
-                        ):
-                            v["situacao"] = nova_situacao
-                            st.rerun()
+                        caminho_foto = nome_arquivo
 
-                        if st.button(
-                            "Excluir veículo",
-                            key=f"excluir_{v['id']}",
-                            use_container_width=True
-                        ):
-                            st.session_state.veiculos = [
-                                item
-                                for item in st.session_state.veiculos
-                                if item["id"] != v["id"]
-                            ]
-                            st.rerun()
+                    dados = {
+                        "concessionaria_id": concessionaria_id,
+                        "marca": marca.strip(),
+                        "modelo": modelo.strip(),
+                        "ano": int(ano),
+                        "quilometragem": int(quilometragem),
+                        "preco": float(preco),
+                        "status": status,
+                        "foto_url": caminho_foto
+                    }
+
+                    (
+                        supabase.table("veiculos")
+                        .insert(dados)
+                        .execute()
+                    )
+
+                    st.success(
+                        "Veículo cadastrado com sucesso! "
+                        "Os dados foram enviados ao Supabase."
+                    )
+
+                    st.balloons()
+
+                    st.cache_data.clear()
+                    st.rerun()
+
+                except Exception as erro:
+                    st.error("Não foi possível salvar o veículo.")
+                    st.warning(
+                        "Confira a conexão, as permissões do banco "
+                        "e as políticas de acesso ao Storage."
+                    )
+                    st.code(str(erro))
+
+
+# ==========================================
+# RODAPÉ
+# ==========================================
+
+st.markdown("""
+<div class="footer">
+    SISTEMA AUTOMOTIVO PRO · GESTÃO INTELIGENTE DE VEÍCULOS
+</div>
+""", unsafe_allow_html=True)
