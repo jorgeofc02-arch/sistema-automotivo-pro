@@ -259,16 +259,16 @@ with st.sidebar:
     st.caption("GESTÃO AUTOMOTIVA")
 
     st.divider()
-
-    pagina = st.radio(
-        "MENU PRINCIPAL",
-        [
-            "Dashboard",
-            "Estoque de veículos",
-            "Cadastrar veículo"
-        ],
-        label_visibility="visible"
-    )
+pagina = st.radio(
+    "MENU PRINCIPAL",
+    [
+        "Dashboard",
+        "Estoque de veículos",
+        "Editar veículo",
+        "Cadastrar veículo"
+    ],
+    label_visibility="visible"
+)
 
     st.divider()
 
